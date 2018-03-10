@@ -1,0 +1,1 @@
+This is a very simple bare bones classifier using k-nearest neighbours algorithm, with k value harcoded to 1.
