@@ -1,7 +1,7 @@
 from scipy.spatial import distance
 
 class KNNClassifier():
-    """Bare bones K nearest neighbour classifier with k=1"""
+    """Bare bones k nearest neighbour classifier with k=1"""
 
     def fit(self, x_train, y_train):
         """Trains the classifier with the input data"""
@@ -12,7 +12,7 @@ class KNNClassifier():
     def predict(self, x_test):
         """Predicts an output depending on the training data"""
 
-        predictions=[]
+        predictions = []
 
         for i_test in x_test:
             label = self.closest(i_test)
