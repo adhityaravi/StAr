@@ -1,9 +1,26 @@
-from  __future__ import print_function
+from __future__ import print_function
+import numpy as np
 
 class DecisionTreeClassifier():
-    """Decision Tree Classifier built based on CART algorithm"""
+    """Decision Tree Classifier built based on CART algorithm
 
-    def __init__(self, dataSet = None, header = None):
+        The classifier has to be initialized with the training data set.
+
+        The training data set should be a 2D array / list with each each column having different feature values and the
+        last column should have the labels.
+
+        Further, for visualization purposes, a header can be included. A header should be a list of different feature
+        names. Note: Without a header it is not possible to visualize the decision tree
+
+        For example consider the following toy dataset and the corresponding header:
+        dataset =  [['Green', 3, 'Apple'],
+                    ['Yellow', 3, 'Apple'],
+                    ['Red', 1, 'Grape'],
+                    ['Red', 1, 'Grape'],
+                    ['Yellow', 3, 'Lemon']]
+        header = ['Colour', 'Diameter', 'Fruit']"""
+
+    def __init__(self, dataSet=None, header=None):
         self.dataSet = dataSet
         self.header = header
 
@@ -134,20 +151,25 @@ class DecisionTreeClassifier():
     def printTree(self, tree, spacing=""):
         """Visualizes the decision tree that the classifier has built"""
 
-        # --> Check if a Leaf node is reached
-        if isinstance(tree, Leaf):
-            print(spacing + "Predict", self.printLeaf(tree.predictions))
-            return
+        if self.header is not None:
+            # --> Check if a Leaf node is reached
+            if isinstance(tree, Leaf):
+                print(spacing + "Predict", self.printLeaf(tree.predictions))
+                return
 
-        # --> If not print the question at the current node
-        print(spacing + str(tree.question))
+            # --> If not print the question at the current node
+            print(spacing + str(tree.question))
 
-        # --> Recursive call to the true and flase branches created because of the question
-        print(spacing + "--> True Branch:")
-        self.printTree(tree.trueBranch, spacing+"  ")
+            # --> Recursive call to the true and flase branches created because of the question
+            print(spacing + "--> True Branch:")
+            self.printTree(tree.trueBranch, spacing+"  ")
 
-        print(spacing + "--> False Branch:")
-        self.printTree(tree.falseBranch, spacing+"  ")
+            print(spacing + "--> False Branch:")
+            self.printTree(tree.falseBranch, spacing+"  ")
+
+        else:
+            print('--------------> '+''.join([u'\u0336{}'.format(c) for c in 'Tada!'])+' <--------------\n')
+            print('\nYou Sir/Madam asked for a decision tree plot without providing a header. Shame!\n')
 
     def printLeaf(self, labelCounts):
         """Prints the confidence data of the Leaf node"""
@@ -177,11 +199,26 @@ class DecisionTreeClassifier():
         else:
             return self.classifyData(data, tree.falseBranch)
 
-    def predict(self, testData):
-        """Build a decision tree and predict the labels for a test dataset"""
+    def predict(self, testData, format='nparray', plotTree=False):
+        """Build a decision tree and predict the labels for a test dataset
+
+            Output of this function is a a numpy array . There is also an option 'list' to get the output as
+            a list of dictionaries which can have better readability and also includes confidence data.
+
+            Note: Using a numpy format when maintaining a string format for the labels may not be very much useful and
+            also the numpy array version cannot be used with self.printPredictions() method
+
+            plotTree option can be used to visualize the decision tree that the classifier has built"""
 
         # --> Building decision tree
         tree = self.buildTree(self.dataSet)
+
+        # --> Plotting tree
+        if plotTree is True:
+            print('\n--------------> Tada! <--------------')
+            print('\n----------> Decision Tree <----------\n')
+            self.printTree(tree)
+            print('\n-------------------------------------\n')
 
         # --> Inititalizing predictions
         predictions = []
@@ -190,7 +227,20 @@ class DecisionTreeClassifier():
         for data in testData:
             predictions.append(self.classifyData(data, tree))
 
-        return predictions
+        # --> List format
+        if format == 'list':
+            return predictions
+
+        # --> Numpy array format
+        elif format == 'nparray':
+            predictionsArray = []
+
+            for iLabel in range(len(predictions)):
+                predictionsArray.append(predictions[iLabel].keys())
+
+            predictionsArray = np.asarray(predictionsArray)
+
+            return predictionsArray[:, 0]
 
     def printPredictions(self, predictions):
         """Print the predictions made in a readable format"""
