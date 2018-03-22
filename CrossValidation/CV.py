@@ -36,17 +36,17 @@ class CrossValidation():
 
         return accuracy
 
-    def kFoldSampling(self, dataSet, kSize):
-        """Performs sampling of the given data for k-fold validation
+    def sampling(self, dataSet, sampleSize):
+        """Performs sampling of the given data and of given size
 
             Note: Sampling is not stratified. Hence the sample distribution may not follow the original distribution
             ToDo: Use stratified sampling to maintain the original data distribution"""
 
         # --> Random sampling from the dataset
-        sampleID = np.random.choice(dataSet.shape[0], kSize, replace=False)
-        kFoldSample = dataSet[sampleID]
+        sampleID = np.random.choice(dataSet.shape[0], sampleSize, replace=False)
+        sample = dataSet[sampleID]
 
-        return kFoldSample, sampleID
+        return sample, sampleID
 
     def kFoldTestTrainSplit(self, kFoldSamples, sampleID1):
         """Creates a training and testing dataset from the k-fold samples
@@ -78,7 +78,6 @@ class CrossValidation():
 
         # --> Initializing the k-fold samples
         kFoldSamples = np.zeros([kSample, kSize, self.dataSet.shape[1]], order='F')
-        print kFoldSamples.shape
         iSample = 0
 
         accuracy = 0
@@ -86,7 +85,7 @@ class CrossValidation():
         # --> Sampling k datasets from the given dataset
         while kSize <= nSize:
 
-            kFoldSamples[iSample, :, :], sampleID = self.kFoldSampling(self.dataSet, kSize)
+            kFoldSamples[iSample, :, :], sampleID = self.sampling(self.dataSet, kSize)
 
             self.dataSet = np.delete(self.dataSet, sampleID, axis=0)
 
@@ -109,6 +108,32 @@ class CrossValidation():
         meanAccuracy = accuracy / kSample
 
         return meanAccuracy
+
+    def holdOutValidation(self, testSize=0.3):
+        """Performs cross validation using hold out method with default test train ratio as 0.3"""
+
+        # --> Calculating the size of test dataset
+        nSize = self.dataSet.shape[0]
+        nTest = int(testSize * nSize)
+
+        # --> Sampling testing data from the dataset
+        testData, sampleID = self.sampling(self.dataSet, nTest)
+
+        # --> Extracting training data from the dataset
+        trainData = np.delete(self.dataSet, sampleID, axis=0)
+
+        # --> Prediction using given classifier
+        self.clf.fit(trainData)
+        predictions = self.clf.predict(testData)
+
+        # --> Calculating accuracy of the predictions
+        accuracy = self.predictionAccuracy(predictions, testData[:, -1])
+
+        return accuracy
+
+
+
+
 
 
 
