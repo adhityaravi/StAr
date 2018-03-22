@@ -15,7 +15,9 @@ class CrossValidation():
         CV = CrossValidation(dataset, clf)
 
         Cross validation of desired type can be then performed. For example:
-        accuracy = CV.kFoldValidation(kSample=5)"""
+        accuracy = CV.kFoldValidation(kSample=5)
+
+        Note: Only k-fold available for now"""
 
     def __init__(self, dataSet, clf):
         self.dataSet = dataSet
@@ -37,7 +39,8 @@ class CrossValidation():
     def kFoldSampling(self, dataSet, kSize):
         """Performs sampling of the given data for k-fold validation
 
-            Note: Sampling is not stratified. Hence the sample distribution may not follow the original distribution"""
+            Note: Sampling is not stratified. Hence the sample distribution may not follow the original distribution
+            ToDo: Use stratified sampling to maintain the original data distribution"""
 
         # --> Random sampling from the dataset
         sampleID = np.random.choice(dataSet.shape[0], kSize, replace=False)
@@ -79,7 +82,6 @@ class CrossValidation():
         iSample = 0
 
         accuracy = 0
-
 
         # --> Sampling k datasets from the given dataset
         while kSize <= nSize:
