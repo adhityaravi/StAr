@@ -15,9 +15,7 @@ class CrossValidation():
         CV = CrossValidation(dataset, clf)
 
         Cross validation of desired type can be then performed. For example:
-        accuracy = CV.kFoldValidation(kSample=5)
-
-        Note: Only k-fold available for now"""
+        accuracy = CV.kFoldValidation(kSample=7)"""
 
     def __init__(self, dataSet, clf):
         self.dataSet = dataSet
@@ -70,7 +68,10 @@ class CrossValidation():
         return trainData, testData
 
     def kFoldValidation(self, kSample=5):
-        """Performs k-fold cross validation with default k value as 5"""
+        """Performs k-fold cross validation with default k value as 5
+
+            * Better stability compared to hold out
+            * Computationally more expensive"""
 
         # --> Calculating the size of a single k-fold sample
         nSize = self.dataSet.shape[0]
@@ -80,6 +81,7 @@ class CrossValidation():
         kFoldSamples = np.zeros([kSample, kSize, self.dataSet.shape[1]], order='F')
         iSample = 0
 
+        # --> Initializing accuracy
         accuracy = 0
 
         # --> Sampling k datasets from the given dataset
@@ -110,7 +112,9 @@ class CrossValidation():
         return meanAccuracy
 
     def holdOutValidation(self, testSize=0.3):
-        """Performs cross validation using hold out method with default test train ratio as 0.3"""
+        """Performs cross validation using hold out method with default test train ratio as 0.3
+
+            * Least computational cost and stability"""
 
         # --> Calculating the size of test dataset
         nSize = self.dataSet.shape[0]
@@ -131,13 +135,35 @@ class CrossValidation():
 
         return accuracy
 
+    def looValidation(self):
+        """Performs cross validation using leave one out algorithm
 
+            * Highly stable validation technique
+            * Computationally super expensive --> Use this for small datasets or with very fast computers"""
 
+        # --> Fetching size of dataset
+        nSize = self.dataSet.shape[0]
 
+        # --> Fetching indices for random sampling
+        sampleID = np.random.choice(nSize, nSize, replace=False)
 
+        # --> Initializing accuracy
+        accuracy = 0
 
+        for iSize in range(nSize):
 
+            # --> Extracting testing and training data
+            testData = self.dataSet[sampleID[iSize]]
+            trainData = np.delete(self.dataSet, sampleID[iSize], axis=0)
 
+            # --> Predictions using given classifier
+            self.clf.fit(trainData)
+            predictions = self.clf.predict(testData)
 
+            # --> Calculating accuracy of the predictions
+            accuracy += self.predictionAccuracy(predictions, testData[-1])
 
+        # --> Calculating mean accuracy
+        meanAccuracy = accuracy / nSize
 
+        return meanAccuracy

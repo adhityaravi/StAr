@@ -231,12 +231,17 @@ class DecisionTreeClassifier:
             self.printTree(tree)
             print('\n-------------------------------------\n')
 
-        # --> Inititalizing predictions
+        # --> Initializing predictions
         predictions = []
 
         # Classifying test data
-        for data in testData:
-            predictions.append(self.classifyData(data, tree))
+        # --> More than one data point to be classified
+        if testData.ndim > 1:
+            for data in testData:
+                predictions.append(self.classifyData(data, tree))
+        # --> Classification of a single data point
+        else:
+            predictions.append(self.classifyData(testData, tree))
 
         # --> List format
         if format == 'list':
