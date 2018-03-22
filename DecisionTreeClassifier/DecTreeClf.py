@@ -1,18 +1,20 @@
 from __future__ import print_function
 import numpy as np
 
-class DecisionTreeClassifier():
+
+class DecisionTreeClassifier:
     """Decision Tree Classifier built based on CART algorithm
 
         The classifier has to be initialized with the training data set.
 
-        The training data set should be a 2D array / list with each each column having different feature values and the
-        last column should have the labels.
+        The training data set should be a 2D array with each each column having different feature values and the
+        last column should have the labels. (List optionality will be removed)
 
         Further, for visualization purposes, a header can be included. A header should be a list of different feature
         names. Note: Without a header it is not possible to visualize the decision tree
 
         For example consider the following toy dataset and the corresponding header:
+
         dataset =  [['Green', 3, 'Apple'],
                     ['Yellow', 3, 'Apple'],
                     ['Red', 1, 'Grape'],
@@ -20,7 +22,15 @@ class DecisionTreeClassifier():
                     ['Yellow', 3, 'Lemon']]
         header = ['Colour', 'Diameter', 'Fruit']"""
 
-    def __init__(self, dataSet=None, header=None):
+    # ToDo: Build a class with multiple cross validation techniques (k-fold, LOO, bootstrapping)
+    # ToDo: Improve accuracy by choosing optimized training data by cross validation within the initial training data
+    # ToDo: Check if logistic regression can be appended to this classifier for further accuracy improvements
+    # ToDo: Remove the 'output as list' option
+
+    def __init__(self):
+        pass
+
+    def fit(self, dataSet, header=None):
         self.dataSet = dataSet
         self.header = header
 
@@ -108,22 +118,25 @@ class DecisionTreeClassifier():
             # --> Looping through the different feature values
             for iFeatureValue in nFeatureValue:
 
-                # --> Creating a question about the feature with a feature value
-                question = Question(iFeature, iFeatureValue, self.header)
+                # --> Looping through different possible questions
+                for qID in range(5):
 
-                # --> Partitioning the dataset based on the question
-                truePart, falsePart = self.partitionDataSet(dataSet, question)
+                    # --> Creating a question about the feature with a feature value
+                    question = Question(iFeature, iFeatureValue, qID, self.header)
 
-                # --> Check if the asked question creates a partition
-                if len(truePart) == 0 or len(falsePart) == 0:
-                    continue
+                    # --> Partitioning the dataset based on the question
+                    truePart, falsePart = self.partitionDataSet(dataSet, question)
 
-                # --> Calculate the info gain because of the asked question
-                infoGain = self.calcInfoGain(truePart, falsePart, currentUncertainity)
+                    # --> Check if the asked question creates a partition
+                    if len(truePart) == 0 or len(falsePart) == 0:
+                        continue
 
-                # --> Comparison with the best gain so far
-                if infoGain > bestInfoGain:
-                    bestInfoGain, bestQuestion = infoGain, question
+                    # --> Calculate the info gain because of the asked question
+                    infoGain = self.calcInfoGain(truePart, falsePart, currentUncertainity)
+
+                    # --> Comparison with the best gain so far
+                    if infoGain > bestInfoGain:
+                        bestInfoGain, bestQuestion = infoGain, question
 
         return bestInfoGain, bestQuestion
 
@@ -160,7 +173,7 @@ class DecisionTreeClassifier():
             # --> If not print the question at the current node
             print(spacing + str(tree.question))
 
-            # --> Recursive call to the true and flase branches created because of the question
+            # --> Recursive call to the true and false branches created because of the question
             print(spacing + "--> True Branch:")
             self.printTree(tree.trueBranch, spacing+"  ")
 
@@ -168,8 +181,7 @@ class DecisionTreeClassifier():
             self.printTree(tree.falseBranch, spacing+"  ")
 
         else:
-            print('--------------> '+''.join([u'\u0336{}'.format(c) for c in 'Tada!'])+' <--------------\n')
-            print('\nYou Sir/Madam asked for a decision tree plot without providing a header. Shame!\n')
+            print('\nNo header provided. Continuing without printing the decision tree')
 
     def printLeaf(self, labelCounts):
         """Prints the confidence data of the Leaf node"""
@@ -206,7 +218,7 @@ class DecisionTreeClassifier():
             a list of dictionaries which can have better readability and also includes confidence data.
 
             Note: Using a numpy format when maintaining a string format for the labels may not be very much useful and
-            also the numpy array version cannot be used with self.printPredictions() method
+            also the numpy array version cannot be used with self.printPredictions() method.
 
             plotTree option can be used to visualize the decision tree that the classifier has built"""
 
@@ -215,7 +227,6 @@ class DecisionTreeClassifier():
 
         # --> Plotting tree
         if plotTree is True:
-            print('\n--------------> Tada! <--------------')
             print('\n----------> Decision Tree <----------\n')
             self.printTree(tree)
             print('\n-------------------------------------\n')
@@ -255,33 +266,44 @@ class Question(DecisionTreeClassifier):
         Based on the asked question, the dataset is partitioned into 2 parts. A true-part that satisfies the asked
         question and a false-part which does not satisfy the question asked"""
 
-    def __init__(self, qFeatureID, qFeatureValue, header=None):
+    def __init__(self, qFeatureID, qFeatureValue, qID, header=None):
 
-        DecisionTreeClassifier.__init__(self, None, header)
+        DecisionTreeClassifier.__init__(self)
         self.qFeatureID = qFeatureID
         self.qFeatureValue = qFeatureValue
+        self.qID = qID
+        self.header = header
 
     def matchFeature(self, data):
         """Matches the Feature value in the given Data with same the Feature value in the question"""
 
         mFeatureValue = data[self.qFeatureID]
 
-        # --> If its a numeric value it check for the target feature value being >= feature value in question or
+        # --> If its a numeric value it checks for the target feature value being >= feature value in question or
         # --> for a non numeric value it checks for the target feature value being == feature value in question
-        if self.isNumeric(self.qFeatureValue):
+        if self.qID is 0 and self.isNumeric(self.qFeatureValue):
+            self.condition = '>='
             return mFeatureValue >= self.qFeatureValue
-        else:
+        elif self.qID is 1 and self.isNumeric(self.qFeatureValue):
+            self.condition = '<='
+            return mFeatureValue <= self.qFeatureValue
+        elif self.qID is 2 and self.isNumeric(self.qFeatureValue):
+            self.condition = '>'
+            return mFeatureValue > self.qFeatureValue
+        elif self.qID is 3 and self.isNumeric(self.qFeatureValue):
+            self.condition = '<'
+            return mFeatureValue < self.qFeatureValue
+        elif self.qID is 4 or (not self.isNumeric(self.qFeatureValue)):
+            self.condition = '=='
             return mFeatureValue == self.qFeatureValue
+        else:
+            raise ValueError('Invalid question id')
 
     def __repr__(self):
         """Represent the question in a readable format if a header is available"""
 
         if self.header is not None:
-            condition = "=="
-            if self.isNumeric(self.qFeatureValue):
-                condition = ">="
-
-            return "Is %s %s %s?" % (self.header[self.qFeatureID], condition, str(self.qFeatureValue))
+            return "Is %s %s %s?" % (self.header[self.qFeatureID], self.condition, str(self.qFeatureValue))
 
         else:
             return self.header
