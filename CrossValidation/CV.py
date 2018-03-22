@@ -139,7 +139,7 @@ class CrossValidation():
         """Performs cross validation using leave one out algorithm
 
             * Highly stable validation technique
-            * Computationally super expensive --> Use this for small datasets or with very fast computers"""
+            * Computationally super expensive --> Use this for small data sets or with very fast computers"""
 
         # --> Fetching size of dataset
         nSize = self.dataSet.shape[0]
